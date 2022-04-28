@@ -59,7 +59,9 @@ export default function CommandScreen() {
 
             const currentData = [];
 
-            if (Object.entries(localStorage).length != 1) {
+            // console.log(Object.entries(localStorage).length);
+
+            if (Object.entries(localStorage).length != 0) {
                 Object.entries(localStorage).forEach((key, index) => {
                     if (key[0] == "<snapshot>") {
                         return;
@@ -104,7 +106,15 @@ export default function CommandScreen() {
 
             const restoredData = JSON.parse(localStorage.getItem("<snapshot>"));
 
-            if (localStorage.getItem("<snapshot>") != null || localStorage.getItem("<snapshot>") != []) {
+            console.log(localStorage.getItem("<snapshot>"));
+
+            if (localStorage.getItem("<snapshot>") == null) {
+                setCommandList(previousCommandList => ([...previousCommandList, "No snapshot available"]));
+
+            } else if (localStorage.getItem("<snapshot>").length == 2) {
+                setCommandList(previousCommandList => ([...previousCommandList, "No snapshot available"]));
+
+            } else {
                 restoredData.forEach(element => {
                     const keyData = element[0];
                     const valueData = element[1];
@@ -123,10 +133,7 @@ export default function CommandScreen() {
                     }
                 });
     
-                setCommandList(previousCommandList => ([...previousCommandList, "Data restored"]));
-            } else {
-                setCommandList(previousCommandList => ([...previousCommandList, "No snapshot available"]));
-            }
+                setCommandList(previousCommandList => ([...previousCommandList, "Data restored"]));            }
             
             // console.log(restoredData);
             document.getElementById("myInput").value = "";
