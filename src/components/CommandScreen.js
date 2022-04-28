@@ -43,7 +43,10 @@ export default function CommandScreen() {
             console.log(Object.entries(localStorage));
             if (Object.entries(localStorage).length != 0) {
                 Object.entries(localStorage).forEach((key, index) => {
-                    setCommandList(previousCommandList => ([...previousCommandList, (index + 1) + ") " + key[0]]));
+                    if (key[0] == "<snapshot>") {
+                        return;
+                    }
+                    setCommandList(previousCommandList => ([...previousCommandList, key[0]]));
                 });
 
             } else {
