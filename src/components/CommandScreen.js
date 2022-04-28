@@ -340,7 +340,15 @@ export default function CommandScreen() {
 
                 }
 
-            } else {
+            } else if (cmd == "SAVE") {
+
+                
+
+            } else if (cmd == "RESTORE") {
+
+
+
+            }else {
                 setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Unknown command"]));
 
             }
@@ -380,7 +388,7 @@ export default function CommandScreen() {
                     <div className="input-group input-group-sm mb-3">
                         &gt;Ledis <input type="text" className="form-control ms-2" id="myInput" onKeyDown={handleKeyDown} onChange={(e) => { setInput(e.target.value) }} aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm"></input>
                     </div>
-                    <button type="button" className="btn btn-primary" onClick={() => setCommandList([])}>CLEAR COMMAND BOX</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => setCommandList([])}>CLEAR COMMAND BOX</button>
                 </div>
             </div>
 
