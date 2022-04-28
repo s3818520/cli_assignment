@@ -4,7 +4,7 @@ export default function CommandScreen() {
 
     const [commandList, setCommandList] = useState([]);
     const [input, setInput] = useState("");
-    const commands = ["GET", "SET", "SADD", "SREM", "SMEMBERS", "SINTER", "KEYS", "DEL", "EXPIRE", "TTL"];
+    const commands = ["GET", "SET", "SADD", "SREM", "SMEMBERS", "SINTER", "KEYS", "DEL", "EXPIRE", "TTL", "SAVE", "RESTORE"];
 
     const removedArray = (array, items) => array.filter(element => { return !items.includes(element) });
 
@@ -52,6 +52,72 @@ export default function CommandScreen() {
             document.getElementById("myInput").value = "";
             setInput("");
             return;
+        } else if (cmd == "SAVE") {
+
+            const currentData = [];
+
+            Object.entries(localStorage).forEach((key, index) => {
+                if (key[0] == "<snapshot>") {
+                    return;
+                }
+                const dataKey = key[0];
+                const dataValue = JSON.parse(localStorage.getItem(key[0]));
+
+                const data = [dataKey, dataValue];
+
+                //If data has expiration value, keep the remaining timer for when it gets restored
+                if (dataValue[0] != "No expiration") {
+                    // clearTimeout(dataValue[0].data);
+
+                    let currentTime = new Date();
+                    let expiredTime = dataValue[0].time;
+
+                    const remainingTime = Math.floor((expiredTime - currentTime.getTime()) / 1000);
+
+                    dataValue[0] = remainingTime * 1000;
+
+                }
+
+                currentData.push(data);
+            });
+
+            localStorage.setItem("<snapshot>", JSON.stringify(currentData));
+            setCommandList(previousCommandList => ([...previousCommandList, "Snapshot created"]));
+
+            console.log(currentData);
+            document.getElementById("myInput").value = "";
+            setInput("");
+            return;
+
+
+        } else if (cmd == "RESTORE") {
+            
+            const restoredData = JSON.parse(localStorage.getItem("<snapshot>"));
+
+            restoredData.forEach(element => {
+                const keyData = element[0];
+                const valueData = element[1];
+
+                if (valueData[0] != "No expiration") {
+                    
+                    const timeout = setTimeout(() => { localStorage.removeItem(keyData); setCommandList(previousCommandList => ([...previousCommandList, "Key " + keyData + " is expired"])); }, valueData[0])
+
+                    let currentTime = new Date();
+                    let expireData = { data: timeout, time: (currentTime.getTime() + valueData[0]) };
+
+                    valueData[0] = expireData;
+
+                    localStorage.setItem(keyData, JSON.stringify(valueData));
+
+                }
+            });
+
+            setCommandList(previousCommandList => ([...previousCommandList, "Data restored"]));
+            // console.log(restoredData);
+            document.getElementById("myInput").value = "";
+            setInput("");
+            return;
+
         }
 
         if (!commands.includes(cmd)) {
@@ -63,6 +129,11 @@ export default function CommandScreen() {
 
         if (key == null) {
             setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Key input none detected"]));
+            document.getElementById("myInput").value = "";
+            setInput("");
+            return;
+        } else if (key == "<snapshot>") {
+            setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Invalid key name"]));
             document.getElementById("myInput").value = "";
             setInput("");
             return;
@@ -81,7 +152,7 @@ export default function CommandScreen() {
                             let storedValue = JSON.parse(localStorage.getItem(key));
                             storedValue.splice(0, 2);
 
-                            setCommandList(previousCommandList => ([...previousCommandList, "\""+storedValue+"\""]));
+                            setCommandList(previousCommandList => ([...previousCommandList, "\"" + storedValue + "\""]));
                         } else {
                             setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Key holding a wrong type of value"]));
                         }
@@ -216,7 +287,7 @@ export default function CommandScreen() {
                             storedValue.splice(0, 2);
 
                             storedValue.forEach((element, index) => {
-                                setCommandList(previousCommandList => ([...previousCommandList, (index + 1) + ") " + "\""+element+"\""]));
+                                setCommandList(previousCommandList => ([...previousCommandList, (index + 1) + ") " + "\"" + element + "\""]));
                             });
                         } else {
                             setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Key holding a wrong type of value"]));
@@ -247,7 +318,7 @@ export default function CommandScreen() {
                     let listOfArrays = [];
                     inputClone2.forEach(key => {
                         let array = JSON.parse(localStorage.getItem(key));
-                        array.splice(0,2)
+                        array.splice(0, 2)
                         listOfArrays.push(array);
                         console.log(listOfArrays);
                     });
@@ -340,15 +411,11 @@ export default function CommandScreen() {
 
                 }
 
-            } else if (cmd == "SAVE") {
-
-
-
             } else if (cmd == "RESTORE") {
 
 
 
-            }else {
+            } else {
                 setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Unknown command"]));
 
             }
@@ -371,9 +438,9 @@ export default function CommandScreen() {
     return (
         <div className="my-auto">
 
-            <div className="card" style={{ heigh: "80%" }}>
+            <div className="card" style={{ heigh: "100vh" }}>
                 <div className="card-header text-center">
-                    <h5>LEDIS</h5>
+                    <h5>WELCOME TO LEDIS</h5>
                 </div>
 
                 <div className="card-body bg-dark text-white overflow-auto" >
@@ -386,7 +453,7 @@ export default function CommandScreen() {
 
                 <div className="card-footer text-center">
                     <div className="input-group input-group-sm mb-3">
-                        &gt;Ledis <input type="text" className="form-control ms-2" placeholder="Enter your command..." style={{border:0 ,outline:0 }} id="myInput" onKeyDown={handleKeyDown} onChange={(e) => { setInput(e.target.value) }} aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm"></input>
+                        &gt;Ledis <input type="text" className="form-control ms-2" placeholder="Enter your command..." style={{ border: 0, outline: 0 }} id="myInput" onKeyDown={handleKeyDown} onChange={(e) => { setInput(e.target.value) }} aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm"></input>
                     </div>
                     <button type="button" className="btn btn-secondary" onClick={() => setCommandList([])}>CLEAR COMMAND BOX</button>
                 </div>
