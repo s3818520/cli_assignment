@@ -41,7 +41,7 @@ export default function CommandScreen() {
 
         if (cmd == "KEYS") {
             console.log(Object.entries(localStorage));
-            if (Object.entries(localStorage).length != 0) {
+            if (Object.entries(localStorage).length != 1) {
                 Object.entries(localStorage).forEach((key, index) => {
                     if (key[0] == "<snapshot>") {
                         return;
@@ -59,7 +59,7 @@ export default function CommandScreen() {
 
             const currentData = [];
 
-            if (Object.entries(localStorage).length != 0) {
+            if (Object.entries(localStorage).length != 1) {
                 Object.entries(localStorage).forEach((key, index) => {
                     if (key[0] == "<snapshot>") {
                         return;
@@ -104,25 +104,30 @@ export default function CommandScreen() {
 
             const restoredData = JSON.parse(localStorage.getItem("<snapshot>"));
 
-            restoredData.forEach(element => {
-                const keyData = element[0];
-                const valueData = element[1];
-
-                if (valueData[0] != "No expiration") {
-
-                    const timeout = setTimeout(() => { localStorage.removeItem(keyData); setCommandList(previousCommandList => ([...previousCommandList, "Key " + keyData + " is expired"])); }, valueData[0])
-
-                    let currentTime = new Date();
-                    let expireData = { data: timeout, time: (currentTime.getTime() + valueData[0]) };
-
-                    valueData[0] = expireData;
-
-                    localStorage.setItem(keyData, JSON.stringify(valueData));
-
-                }
-            });
-
-            setCommandList(previousCommandList => ([...previousCommandList, "Data restored"]));
+            if (localStorage.getItem("<snapshot>") != null || localStorage.getItem("<snapshot>") != []) {
+                restoredData.forEach(element => {
+                    const keyData = element[0];
+                    const valueData = element[1];
+    
+                    if (valueData[0] != "No expiration") {
+    
+                        const timeout = setTimeout(() => { localStorage.removeItem(keyData); setCommandList(previousCommandList => ([...previousCommandList, "Key " + keyData + " is expired"])); }, valueData[0])
+    
+                        let currentTime = new Date();
+                        let expireData = { data: timeout, time: (currentTime.getTime() + valueData[0]) };
+    
+                        valueData[0] = expireData;
+    
+                        localStorage.setItem(keyData, JSON.stringify(valueData));
+    
+                    }
+                });
+    
+                setCommandList(previousCommandList => ([...previousCommandList, "Data restored"]));
+            } else {
+                setCommandList(previousCommandList => ([...previousCommandList, "No snapshot available"]));
+            }
+            
             // console.log(restoredData);
             document.getElementById("myInput").value = "";
             setInput("");
