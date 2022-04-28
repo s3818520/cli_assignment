@@ -7,6 +7,16 @@ export default function CommandScreen() {
     const commands = ["GET", "SET", "SADD", "SREM", "SMEMBERS", "SINTER", "KEYS", "DEL", "EXPIRE", "TTL", "SAVE", "RESTORE"];
 
     const removedArray = (array, items) => array.filter(element => { return !items.includes(element) });
+    const noneExistValues = (array, items) => {
+        const result = [];
+        items.forEach(element => {
+            if (!array.includes(element)) {
+                result.push(element);
+            }
+        });
+
+        return result;
+    }
 
     const intersection = (array1, array2) => {
         const intersect = [];
@@ -34,14 +44,14 @@ export default function CommandScreen() {
         setCommandList(previousCommandList => ([...previousCommandList, "> " + input]));
         // console.log(document.getElementById("myInput").value)
         const value = document.getElementById("myInput").value.split(" ");
-        const cmd = value[0];
+        const cmd = value[0].toUpperCase();
         // console.log(cmd);
         const key = value[1];
         const val = value[2];
 
         if (cmd == "KEYS") {
             console.log(Object.entries(localStorage));
-            if (Object.entries(localStorage).length != 1) {
+            if (Object.entries(localStorage).length != 0) {
                 Object.entries(localStorage).forEach((key, index) => {
                     if (key[0] == "<snapshot>") {
                         return;
@@ -101,7 +111,6 @@ export default function CommandScreen() {
             return;
 
 
-
         } else if (cmd == "RESTORE") {
 
             const restoredData = JSON.parse(localStorage.getItem("<snapshot>"));
@@ -118,23 +127,24 @@ export default function CommandScreen() {
                 restoredData.forEach(element => {
                     const keyData = element[0];
                     const valueData = element[1];
-    
+
                     if (valueData[0] != "No expiration") {
-    
+
                         const timeout = setTimeout(() => { localStorage.removeItem(keyData); setCommandList(previousCommandList => ([...previousCommandList, "Key " + keyData + " is expired"])); }, valueData[0])
-    
+
                         let currentTime = new Date();
                         let expireData = { data: timeout, time: (currentTime.getTime() + valueData[0]) };
-    
+
                         valueData[0] = expireData;
-    
+
                         localStorage.setItem(keyData, JSON.stringify(valueData));
-    
+
                     }
                 });
-    
-                setCommandList(previousCommandList => ([...previousCommandList, "Data restored"]));            }
-            
+
+                setCommandList(previousCommandList => ([...previousCommandList, "Data restored"]));
+            }
+
             // console.log(restoredData);
             document.getElementById("myInput").value = "";
             setInput("");
@@ -190,8 +200,21 @@ export default function CommandScreen() {
                         setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Syntax error. Only a key and a value are required"]));
                     } else {
                         let data = [val];
-                        data.unshift("Single")
-                        data.unshift("No expiration")
+
+                        if (localStorage.getItem(key) != null) {
+                            if (JSON.parse(localStorage.getItem(key))[0] != "No expiration") {
+                                data.unshift("Single");
+                                data.unshift(JSON.parse(localStorage.getItem(key))[0]);
+
+                            } else {
+                                data.unshift("Single")
+                                data.unshift("No expiration")
+                            }
+                        } else {
+                            data.unshift("Single")
+                            data.unshift("No expiration")
+                        }
+
                         localStorage.setItem(key, JSON.stringify(data));
 
                         setCommandList(previousCommandList => ([...previousCommandList, "Store value " + val + " in key " + key]));
@@ -213,8 +236,20 @@ export default function CommandScreen() {
                 // console.log(findDuplicates(inputClone).length == 0);
                 if (findDuplicates(inputClone).length == 0) {
                     if (val) {
-                        inputClone.unshift("Set");
-                        inputClone.unshift("No expiration");
+
+                        if (localStorage.getItem(key) != null) {
+                            if (JSON.parse(localStorage.getItem(key))[0] != "No expiration") {
+                                inputClone.unshift("Set");
+                                inputClone.unshift(JSON.parse(localStorage.getItem(key))[0]);
+
+                            } else {
+                                inputClone.unshift("Set");
+                                inputClone.unshift("No expiration");
+                            }
+                        } else {
+                            inputClone.unshift("Set");
+                            inputClone.unshift("No expiration");
+                        }
                         localStorage.setItem(key, JSON.stringify(inputClone))
 
                         setCommandList(previousCommandList => ([...previousCommandList, "Values stored in key " + key]));
@@ -266,8 +301,13 @@ export default function CommandScreen() {
 
                                 //Check if the user remove every value in a key, if yes delete the key
                                 if (removedArray(storedValue, inputClone1).length == 2) {
+                                    if (JSON.parse(localStorage.getItem(key))[0] != "No expiration") {
+                                        clearTimeout(JSON.parse(localStorage.getItem(key))[0].data);
+                                    }
                                     localStorage.removeItem(key);
                                     setCommandList(previousCommandList => ([...previousCommandList, "Removed value(s) " + removedValue + " from key " + key]));
+                                    setCommandList(previousCommandList => ([...previousCommandList, "Non-existing value(s) from the input: "+noneExistValues(storedValue, inputClone1)]));
+
                                     setCommandList(previousCommandList => ([...previousCommandList, "Key " + key + " contains 0 value. Deleting this key..."]));
 
                                     document.getElementById("myInput").value = "";
@@ -277,16 +317,19 @@ export default function CommandScreen() {
                                 } else {
                                     localStorage.setItem(key, JSON.stringify(removedArray(storedValue, inputClone1)));
                                 }
-
+                                
                                 setCommandList(previousCommandList => ([...previousCommandList, "Removed value(s) " + removedValue + " from key " + key]));
+                                setCommandList(previousCommandList => ([...previousCommandList, "Non-existing value(s) from the input: "+noneExistValues(storedValue, inputClone1)]));
+
 
                             } else {
-                                setCommandList(previousCommandList => ([...previousCommandList, "ERROR: No value detected"]));
+                                setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Set value contains duplicates of " + "\"" + [...new Set(findDuplicates(inputClone1))] + "\""]));
 
                             }
 
                         } else {
-                            setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Set value contains duplicates of " + "\"" + [...new Set(findDuplicates(inputClone1))] + "\""]));
+                            setCommandList(previousCommandList => ([...previousCommandList, "ERROR: No value detected"]));
+
 
                         }
                     } else {
@@ -357,6 +400,9 @@ export default function CommandScreen() {
                     if (val) {
                         setCommandList(previousCommandList => ([...previousCommandList, "ERROR: No value in DEL command syntax"]));
                     } else {
+                        if (JSON.parse(localStorage.getItem(key))[0] != "No expiration") {
+                            clearTimeout(JSON.parse(localStorage.getItem(key))[0].data);
+                        }
                         localStorage.removeItem(key);
                         setCommandList(previousCommandList => ([...previousCommandList, "Key " + key + " has been removed"]));
 
