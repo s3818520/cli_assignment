@@ -137,9 +137,9 @@ export default function CommandScreen() {
 
                         valueData[0] = expireData;
 
-                        localStorage.setItem(keyData, JSON.stringify(valueData));
-
                     }
+
+                    localStorage.setItem(keyData, JSON.stringify(valueData));
                 });
 
                 setCommandList(previousCommandList => ([...previousCommandList, "Data restored"]));
@@ -478,10 +478,6 @@ export default function CommandScreen() {
                     }
 
                 }
-
-            } else if (cmd == "RESTORE") {
-
-
 
             } else {
                 setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Unknown command"]));
