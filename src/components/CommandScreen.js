@@ -7,6 +7,8 @@ export default function CommandScreen() {
     const commands = ["GET", "SET", "SADD", "SREM", "SMEMBERS", "SINTER", "KEYS", "DEL", "EXPIRE", "TTL", "SAVE", "RESTORE"];
 
     const removedArray = (array, items) => array.filter(element => { return !items.includes(element) });
+    
+    //Return a list of values from items that arent existed in array
     const noneExistValues = (array, items) => {
         const result = [];
         items.forEach(element => {
@@ -48,6 +50,13 @@ export default function CommandScreen() {
         // console.log(cmd);
         const key = value[1];
         const val = value[2];
+
+        if (!commands.includes(cmd)) {
+            setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Unknown command"]));
+            document.getElementById("myInput").value = "";
+            setInput("");
+            return;
+        }
 
         if (cmd == "KEYS") {
             console.log(Object.entries(localStorage));
@@ -152,13 +161,6 @@ export default function CommandScreen() {
 
         }
 
-        if (!commands.includes(cmd)) {
-            setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Unknown command"]));
-            document.getElementById("myInput").value = "";
-            setInput("");
-            return;
-        }
-
         if (key == null) {
             setCommandList(previousCommandList => ([...previousCommandList, "ERROR: Key input none detected"]));
             document.getElementById("myInput").value = "";
@@ -170,6 +172,7 @@ export default function CommandScreen() {
             setInput("");
             return;
         }
+
 
         try {
             if (cmd == "GET") {
@@ -237,7 +240,10 @@ export default function CommandScreen() {
                 if (findDuplicates(inputClone).length == 0) {
                     if (val) {
 
+                        const storedValue = [];
+
                         if (localStorage.getItem(key) != null) {
+                            storedValue = JSON.parse(localStorage.getItem(key));
                             if (JSON.parse(localStorage.getItem(key))[0] != "No expiration") {
                                 inputClone.unshift("Set");
                                 inputClone.unshift(JSON.parse(localStorage.getItem(key))[0]);
@@ -246,9 +252,18 @@ export default function CommandScreen() {
                                 inputClone.unshift("Set");
                                 inputClone.unshift("No expiration");
                             }
+
+                            inputClone.forEach(element => {
+                                storedValue.push(element);
+                            });
+
                         } else {
                             inputClone.unshift("Set");
                             inputClone.unshift("No expiration");
+                        }
+
+                        if (findDuplicates(inputClone).length == 0) {
+                            
                         }
                         localStorage.setItem(key, JSON.stringify(inputClone))
 
@@ -493,7 +508,7 @@ export default function CommandScreen() {
 
     }
 
-    const handleKeyDown = (event) => {
+    const onEnter = (event) => {
         if (event.key === 'Enter') {
             processCommands();
         }
@@ -517,7 +532,7 @@ export default function CommandScreen() {
 
                 <div className="card-footer text-center">
                     <div className="input-group input-group-sm mb-3">
-                        &gt;Ledis <input type="text" className="form-control ms-2" placeholder="Enter your command..." style={{ border: 0, outline: 0 }} id="myInput" onKeyDown={handleKeyDown} onChange={(e) => { setInput(e.target.value) }} aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm"></input>
+                        &gt;Ledis <input type="text" className="form-control ms-2" placeholder="Enter your command..." style={{ border: 0, outline: 0 }} id="myInput" onKeyDown={onEnter} onChange={(e) => { setInput(e.target.value) }} aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm"></input>
                     </div>
                     <button type="button" className="btn btn-secondary" onClick={() => setCommandList([])}>CLEAR COMMAND BOX</button>
                 </div>
